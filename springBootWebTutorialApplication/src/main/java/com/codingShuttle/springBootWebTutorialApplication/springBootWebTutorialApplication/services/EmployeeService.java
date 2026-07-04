@@ -2,6 +2,7 @@ package com.codingShuttle.springBootWebTutorialApplication.springBootWebTutorial
 
 import com.codingShuttle.springBootWebTutorialApplication.springBootWebTutorialApplication.dto.EmployeeDTO;
 import com.codingShuttle.springBootWebTutorialApplication.springBootWebTutorialApplication.entities.EmployeeEntity;
+import com.codingShuttle.springBootWebTutorialApplication.springBootWebTutorialApplication.exceptions.ResourceNotFoundException;
 import com.codingShuttle.springBootWebTutorialApplication.springBootWebTutorialApplication.repositories.EmployeeRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,8 @@ public class EmployeeService {
     }
 
     public EmployeeDTO updateEmployeeById(Long employeeId, EmployeeDTO employeeDTO) {
+        boolean exist = isExistByEmployeeId(employeeId);
+        if (!exist) throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
         EmployeeEntity employeeEntity = modelMapper.map(employeeDTO, EmployeeEntity.class);
         employeeEntity.setId(employeeId);
         EmployeeEntity savedEmployeeEntity = employeeRepository.save(employeeEntity);
@@ -59,14 +62,14 @@ public class EmployeeService {
 
     public boolean deleteEmployeeById(Long employeeId) {
         boolean exist = isExistByEmployeeId(employeeId);
-        if (!exist) return false;
+        if (!exist) throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
         employeeRepository.deleteById(employeeId);
         return true;
     }
 
     public EmployeeDTO updatePartialEmployeeById(Long employeeId, Map<String, Object> updates) {
         boolean exist = isExistByEmployeeId(employeeId);
-        if (!exist) return null;
+        if (!exist) throw new ResourceNotFoundException("Employee not found with id: " + employeeId);
         EmployeeEntity employeeEntity = employeeRepository.findById(employeeId).get();
         updates.forEach((field, value) -> {
             Field fieldToBeUpdate = ReflectionUtils.findField(EmployeeEntity.class, field);
